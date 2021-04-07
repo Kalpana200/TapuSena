@@ -38,6 +38,42 @@ function App() {
     if (requestArray.filter((f) => f < currentFloor).length) moveDown();
     else moveUp();
   };
+  const moveElevator = () => {
+    setIdle(false);
+    if (requestArray.includes(currentFloor)) stop();
+    else if (requestArray[0] > currentFloor) moveUp();
+    else moveDown();
+  };
+
+  const moveUp = () => {
+    if (requestArray.length) {
+      setMovingState(1);
+      elevator.current.style.marginBottom = (currentFloor + 1) * 10 + "vh";
+      setTimeout(() => {
+        setCurrentFloor(currentFloor + 1);
+      }, 1000);
+    } else {
+      setIdle(true);
+      setTimeout(() => {
+        closeDoor();
+      }, 4000);
+    }
+  };
+
+  const moveDown = () => {
+    if (requestArray.length) {
+      setMovingState(-1);
+      elevator.current.style.marginBottom = (currentFloor - 1) * 10 + "vh";
+      setTimeout(() => {
+        setCurrentFloor(currentFloor - 1);
+      }, 1000);
+    } else {
+      setIdle(true);
+      setTimeout(() => {
+        closeDoor();
+      }, 4000);
+    }
+  };
 
   useEffect(() => {
     if (doorState) startTimer();
@@ -82,6 +118,12 @@ function App() {
     setTimeout(() => {
       setDoorState(0);
     }, 5000);
+  };
+  
+  const stop = () => {   
+    openDoor();
+    setRequestArray((prevValue) => prevValue.filter((f) => f !== currentFloor));
+    setDoorState(1);
   };
 
   const openDoor = () => {

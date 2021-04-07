@@ -9,6 +9,35 @@ function App() {
   const form = useRef(null);
   const [doorState, setDoorState] = useState(0);
   const [weight, setWeight] = useState(0);
+  const [currentFloor, setCurrentFloor] = useState(0);  
+  const [requestArray, setRequestArray] = useState([]);
+  const [movingState, setMovingState] = useState(0); // 0 for idle, 1 for up, -1 for down
+  const [idle, setIdle] = useState(true);
+  const addRequest = (floor) => {
+    setRequestArray((prevValue) => [...prevValue, floor]);
+  };
+
+  useEffect(() => {
+    if (requestArray !== [] && idle) moveElevator();
+  }, [requestArray]);
+
+  useEffect(() => {
+    if (!idle) {
+      if (requestArray.includes(currentFloor)) stop();
+      else if (movingState === 1) checkUp();
+      else checkDown();
+    }
+  }, [currentFloor]);
+
+  const checkUp = () => {
+    if (requestArray.filter((f) => f > currentFloor).length) moveUp();
+    else moveDown();
+  };
+
+  const checkDown = () => {
+    if (requestArray.filter((f) => f < currentFloor).length) moveDown();
+    else moveUp();
+  };
 
   useEffect(() => {
     if (doorState) startTimer();

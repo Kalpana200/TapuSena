@@ -7,6 +7,8 @@ function App() {
   const elevator = useRef(null);
   const door = useRef(null);
   const form = useRef(null);
+  const [warning, setWarning] = useState(0);   
+  const [emergencyState, setEmergencyState] = useState(0);
   const [doorState, setDoorState] = useState(0);
   const [weight, setWeight] = useState(0);
   const [currentFloor, setCurrentFloor] = useState(0);  
@@ -133,7 +135,29 @@ function App() {
   const closeDoor = () => {
     door.current.style.width = "3%";
   };
+  const emergency = () => {   
+    setRequestArray([]);
+    setEmergencyState(1);
+    form.current.submit();
+  };
 
+  const handleSubmit = (ev) => {
+    ev.preventDefault();
+    const form = ev.target;
+    const data = new FormData(form);
+    const xhr = new XMLHttpRequest();
+    xhr.open(form.method, form.action);
+    xhr.setRequestHeader("Accept", "application/json");
+    xhr.onreadystatechange = () => {
+      if (xhr.readyState !== XMLHttpRequest.DONE) return;
+      if (xhr.status === 200) {
+        form.reset();
+      } else {
+        console.log("error");
+      }
+    };
+    xhr.send(data);
+  };
   return (
     <div className="w-screen h-screen bg-gray-600 text-white flex">
       <Controls

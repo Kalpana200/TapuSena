@@ -39,7 +39,6 @@ function App() {
     if (requestArray.filter((f) => f < currentFloor).length) moveDown();
     else moveUp();
   };
-
   const moveElevator = () => {
     setIdle(false);
     if (requestArray.includes(currentFloor)) stop();
@@ -128,12 +127,23 @@ function App() {
     setDoorState(1);
   };
 
+  const stop = () => {
+    openDoor();
+    setRequestArray((prevValue) => prevValue.filter((f) => f !== currentFloor));
+    setDoorState(1);
+  };
+
   const openDoor = () => {
     door.current.style.width = "90%";
   };
 
   const closeDoor = () => {
     door.current.style.width = "3%";
+  };
+  const emergency = () => {
+    setRequestArray([]);
+    setEmergencyState(1);
+    form.current.submit();
   };
 
   const emergency = () => {

@@ -6,9 +6,76 @@ import Elevator from "./components/Elevator";
 function App() {
   const elevator = useRef(null);
   const door = useRef(null);
-  const form = useRef(null);
+  const [warning, setWarning] = useState(0);
+  const [emergencyState, setEmergencyState] = useState(0);
   const [doorState, setDoorState] = useState(0);
   const [weight, setWeight] = useState(0);
+  const [currentFloor, setCurrentFloor] = useState(0);
+  const [requestArray, setRequestArray] = useState([]);
+  const [movingState, setMovingState] = useState(0); // 0 for idle, 1 for up, -1 for down
+  const [idle, setIdle] = useState(true);
+  const addRequest = (floor) => {
+    setRequestArray((prevValue) => [...prevValue, floor]);
+  };
+
+  useEffect(() => {
+    if (requestArray !== [] && idle) moveElevator();
+  }, [requestArray]);
+
+  useEffect(() => {
+    if (!idle) {
+      if (requestArray.includes(currentFloor)) stop();
+      else if (movingState === 1) checkUp();
+      else checkDown();
+    }
+  }, [currentFloor]);
+
+  const checkUp = () => {
+    if (requestArray.filter((f) => f > currentFloor).length) moveUp();
+    else moveDown();
+  };
+
+  const checkDown = () => {
+    if (requestArray.filter((f) => f < currentFloor).length) moveDown();
+    else moveUp();
+  };
+
+  const moveElevator = () => {
+    setIdle(false);
+    if (requestArray.includes(currentFloor)) stop();
+    else if (requestArray[0] > currentFloor) moveUp();
+    else moveDown();
+  };
+
+  const moveUp = () => {
+    if (requestArray.length) {
+      setMovingState(1);
+      elevator.current.style.marginBottom = (currentFloor + 1) * 10 + "vh";
+      setTimeout(() => {
+        setCurrentFloor(currentFloor + 1);
+      }, 1000);
+    } else {
+      setIdle(true);
+      setTimeout(() => {
+        closeDoor();
+      }, 4000);
+    }
+  };
+
+  const moveDown = () => {
+    if (requestArray.length) {
+      setMovingState(-1);
+      elevator.current.style.marginBottom = (currentFloor - 1) * 10 + "vh";
+      setTimeout(() => {
+        setCurrentFloor(currentFloor - 1);
+      }, 1000);
+    } else {
+      setIdle(true);
+      setTimeout(() => {
+        closeDoor();
+      }, 4000);
+    }
+  };
 
   useEffect(() => {
     if (doorState) startTimer();
@@ -55,12 +122,32 @@ function App() {
     }, 5000);
   };
 
+  const stop = () => {
+    openDoor();
+    setRequestArray((prevValue) => prevValue.filter((f) => f !== currentFloor));
+    setDoorState(1);
+  };
+
   const openDoor = () => {
     door.current.style.width = "90%";
   };
 
   const closeDoor = () => {
     door.current.style.width = "3%";
+  };
+
+  const emergency = () => {
+    setRequestArray([]);
+    setEmergencyState(1);
+    fetch("http://localhost:3001/database", {
+      method: "POST",
+    })
+      .then((data) => {
+        console.log(data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
   return (
@@ -81,15 +168,6 @@ function App() {
       <span className="absolute p-3 text-2xl italic text-gray-400">
         elevate
       </span>
-      <form
-        ref={form}
-        className="h-0 w-0 overflow-hidden"
-        onSubmit={handleSubmit}
-        action="https://formspree.io/f/mknknzyr"
-        method="POST"
-      >
-        <input type="hidden" name="message" value="Emergency Alert!" />
-      </form>
     </div>
   );
 }
